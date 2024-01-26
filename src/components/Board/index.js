@@ -1,34 +1,78 @@
-import React, { useLayoutEffect, useRef } from 'react';
-import styles from './index.module.css';
+import { useEffect, useLayoutEffect, useRef } from "react";
+import { useSelector, useDispatch } from 'react-redux'
+
+import { MENU_ITEMS } from "@/constants";
+import { menuItemClick, actionItemClick } from '@/slice/menuSlice'
 
 const Board = () => {
-    const canvasRef = useRef(null);
+    const dispatch = useDispatch()
+    const canvasRef = useRef(null)
+    const drawHistory = useRef([])
+    const historyPointer = useRef(0)
+    const shouldDraw = useRef(false)
+    const { activeMenuItem, actionMenuItem } = useSelector((state) => state.menu)
+    const { color, size } = useSelector((state) => state.toolbox[activeMenuItem])
 
-    useLayoutEffect(() => {
+    useEffect(() => {
+        if (!canvasRef.current) return
         const canvas = canvasRef.current;
-        const context = canvas.getContext('2d');
+        const context = canvas.getContext('2d')
 
-        const resizeCanvas = () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        };
+        const changeConfig = () => {
+            context.strokeStyle = color
+            context.lineWidth = size
+        }
+        changeConfig()
+    }, [color, size])
 
-        // Initial setup
-        resizeCanvas();
+    // before browser pain
+    useLayoutEffect(() => {
+        if (!canvasRef.current) return
+        const canvas = canvasRef.current;
+        const context = canvas.getContext('2d')
 
-        // Event listener for window resize
-        window.addEventListener('resize', resizeCanvas);
+        canvas.width = window.innerWidth
+        canvas.height = window.innerHeight
 
-        // Cleanup: Remove the event listener when the component is unmounted
+        const beginPath = (x, y) => {
+            context.beginPath()
+            context.moveTo(x, y)
+        }
+
+        const drawLine = (x, y) => {
+            context.lineTo(x, y)
+            context.stroke()
+        }
+        const handleMouseDown = (e) => {
+            shouldDraw.current = true
+            beginPath(e.clientX, e.clientY)
+        }
+
+        const handleMouseMove = (e) => {
+            if (!shouldDraw.current) return
+            drawLine(e.clientX, e.clientY)
+        }
+
+        const handleMouseUp = (e) => {
+            shouldDraw.current = false
+            const imageData = context.getImageData(0, 0, canvas.width, canvas.height)
+            drawHistory.current.push(imageData)
+            historyPointer.current = drawHistory.current.length - 1
+        }
+
+        canvas.addEventListener('mousedown', handleMouseDown)
+        canvas.addEventListener('mousemove', handleMouseMove)
+        canvas.addEventListener('mouseup', handleMouseUp)
+
         return () => {
-            window.removeEventListener('resize', resizeCanvas);
-        };
-    }, []);
+            canvas.removeEventListener('mousedown', handleMouseDown)
+            canvas.removeEventListener('mousemove', handleMouseMove)
+            canvas.removeEventListener('mouseup', handleMouseUp)
+        }
+    }, [])
 
-    return (
-        <canvas ref={canvasRef}>
-
-        </canvas>);
-};
+    return (<canvas ref={canvasRef}></canvas>
+    )
+}
 
 export default Board;

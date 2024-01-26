@@ -1,0 +1,6 @@
+.canvasContainer {
+    overflow: auto;
+    max-width: 100%; /* or any fixed width that suits your design */
+    max-height: 100vh; /* or any fixed height that suits your design */
+  }
+  
