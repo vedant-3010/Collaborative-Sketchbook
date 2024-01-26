@@ -1,28 +1,34 @@
-import React, { useEffect, useRef } from 'react'
-import styles from './index.module.css'
+import React, { useLayoutEffect, useRef } from 'react';
+import styles from './index.module.css';
 
 const Board = () => {
-    const canvasref = useRef(null)
+    const canvasRef = useRef(null);
 
-    useEffect(() => {
-    if(!canvasref.current) return 
-    const canvas = canvasref.current;
-    const context = canvas.getContext('2d');
+    useLayoutEffect(() => {
+        const canvas = canvasRef.current;
+        const context = canvas.getContext('2d');
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    //   return () => {
-    //     second
-    //   }
-    }, [])
-    
+        const resizeCanvas = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        };
+
+        // Initial setup
+        resizeCanvas();
+
+        // Event listener for window resize
+        window.addEventListener('resize', resizeCanvas);
+
+        // Cleanup: Remove the event listener when the component is unmounted
+        return () => {
+            window.removeEventListener('resize', resizeCanvas);
+        };
+    }, []);
+
     return (
-        <>
-        <canvas ref = {canvasref}>
+        <canvas ref={canvasRef}>
 
-        </canvas>
-        </>
-    )
-}
+        </canvas>);
+};
 
 export default Board;
